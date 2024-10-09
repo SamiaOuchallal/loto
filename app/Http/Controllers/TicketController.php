@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ticket;
+use App\Models\Joueur;
 use Illuminate\Http\Request;
 
 class TicketController extends Controller{
@@ -49,7 +50,6 @@ class TicketController extends Controller{
         }
     }
     
-    
 
 
     public function generer_etoiles(){
@@ -63,7 +63,6 @@ class TicketController extends Controller{
 
         sort($etoiles);
         return $etoiles;
-
     }
 
 
@@ -75,19 +74,16 @@ class TicketController extends Controller{
                 $numeros[]=$n;
             }
         }
-
         sort($numeros);
         return $numeros;
-
     }
 
 
     public function generer_nom(){
-        $noms=["Josh","Victoire","Ellen","Kavu","Alex","Ramir","Ines","Sofiane","Djib","Fuuuull"];
+        $noms=["Josh","Victoire","India","Axeeel","Ellen","Kavu","Alex","Ramir","Ines","Sofiane","Djib","Fuuuull"];
         $n = array_rand($noms);
         return $noms[$n];
     }
-
 
 
     public function players_generator(Request $request){
@@ -102,20 +98,25 @@ class TicketController extends Controller{
             'numeros'=>$this->generer_numeros(),
             ];
 
-            /*
+
+            $j = Joueur::create([
+                'username'=>$joueurs['username'],
+            ]);
+
             Ticket::create([
-                'username' => $username,
-                'numeros' => json_encode($numeros), // Stocker en JSON si nécessaire
-                'etoiles' => json_encode($etoiles), // Stocker en JSON si nécessaire
-            ]); */
+                'id_joueur'=>$j->id,
+                'etoiles'=>json_encode($joueurs[$i]['etoiles']),
+                'numeros'=>json_encode($joueurs[$i]['numeros']),
+            ]);
+
+
+    
 
             \Log::info('Joueurs générés :', $joueurs);
         }
 
         return redirect()->route('classement')->with('joueurs',$joueurs);
-
     }
-
 
 
     public function generer_ticket_gagnant(){
