@@ -81,9 +81,70 @@ valider_grille.addEventListener('click', function() {
         document.getElementById('numeros_input').value = JSON.stringify(numeros);
         document.getElementById('etoiles_input').value = JSON.stringify(etoiles);
 
-        // Soumettre le formulaire
-        document.querySelector('form').submit();
     } else {
         valider_grille_text.textContent = "Zut ... Il manque quelque chose ? Revoyez votre composition !";
+    }
+});
+
+
+
+document.querySelectorAll('.numero').forEach(button => {
+    button.addEventListener('click', function() {
+        // Limiter la sélection à 5 numéros
+        const selectedNumbers = Array.from(document.querySelectorAll('.numero.selected'));
+        if (selectedNumbers.length < 5 || this.classList.contains('selected')) {
+            this.classList.toggle('selected'); // Ajouter ou enlever la classe 'selected'
+            updateNumerosInput(); // Mettre à jour le champ caché avec les numéros sélectionnés
+        }
+    });
+});
+
+// Ajouter un événement de clic à tous les boutons d'étoile
+document.querySelectorAll('.etoile').forEach(button => {
+    button.addEventListener('click', function() {
+        // Limiter la sélection à 2 étoiles
+        const selectedStars = Array.from(document.querySelectorAll('.etoile.selected'));
+        if (selectedStars.length < 2 || this.classList.contains('selected')) {
+            this.classList.toggle('selected'); // Ajouter ou enlever la classe 'selected'
+            updateEtoilesInput(); // Mettre à jour le champ caché avec les étoiles sélectionnées
+        }
+    });
+});
+
+// Mettre à jour le champ caché pour les numéros
+function updateNumerosInput() {
+    const numerosChoisis = [];
+    document.querySelectorAll('.numero.selected').forEach(button => {
+        numerosChoisis.push(button.dataset.value);
+    });
+    document.getElementById('numeros_input').value = JSON.stringify(numerosChoisis);
+}
+
+// Mettre à jour le champ caché pour les étoiles
+function updateEtoilesInput() {
+    const etoilesChoisies = [];
+    document.querySelectorAll('.etoile.selected').forEach(button => {
+        etoilesChoisies.push(button.dataset.value);
+    });
+    document.getElementById('etoiles_input').value = JSON.stringify(etoilesChoisies);
+}
+
+// Valider la grille lors du clic sur "Valider ma grille"
+document.getElementById('grille_validation').addEventListener('click', function() {
+    // Mettre à jour les champs cachés avant de soumettre le formulaire
+    updateNumerosInput();
+    updateEtoilesInput();
+    alert('Grille validée, vous pouvez lancer la partie.');
+});
+
+// Soumettre le formulaire lors du clic sur "Lancer la partie"
+document.getElementById('jouer_form').addEventListener('submit', function(e) {
+    // Vérifier que les numéros et étoiles sont bien remplis
+    const numeros = document.getElementById('numeros_input').value;
+    const etoiles = document.getElementById('etoiles_input').value;
+
+    if (numeros === '[]' || etoiles === '[]') {
+       // Empêcher la soumission si la grille est vide
+        alert('Veuillez sélectionner 5 numéros et 2 étoiles avant de lancer la partie.');
     }
 });

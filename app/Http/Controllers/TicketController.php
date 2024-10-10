@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ticket;
 use App\Models\Joueur;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller{
 
@@ -12,7 +13,7 @@ class TicketController extends Controller{
         return view('jouer_en_ligne');
     }
 
-    public function soumettreForm(Request $request){
+    /*public function soumettreForm(Request $request){
         // Décoder les champs 'numeros' et 'etoiles' en tableaux
         $numeros = json_decode($request->input('numeros'), true);
         $etoiles = json_decode($request->input('etoiles'), true);
@@ -34,11 +35,12 @@ class TicketController extends Controller{
                 'etoiles' => 'required|array|size:2',
                 'numeros.*' => 'required|integer|between:1,49',
                 'etoiles.*' => 'required|integer|between:1,9',
+                'nb_joueurs'=>'required|integer|min:0|max:100',
             ]);
     
             // Créer le ticket
-            $ticket = Ticket::create([
-                'username' => $data['username'],
+            Ticket::create([
+                'id_joueur' => $joueur->id,
                 'numeros' => json_encode($data['numeros']), // Stocker en JSON si nécessaire
                 'etoiles' => json_encode($data['etoiles']), // Stocker en JSON si nécessaire
             ]);
@@ -48,9 +50,89 @@ class TicketController extends Controller{
         } else {
             return redirect()->route('soumettreForm')->withErrors('Les données n\'ont pas pu être décodées.');
         }
-    }
-    
+   
 
+    public function soumettreForm(Request $request)
+{
+    // Validation des données soumises
+    $data = $request->validate([
+        'username' => 'required|string|max:255',
+        'numeros' => 'required|array|size:5',
+        'etoiles' => 'required|array|size:2',
+        'nb_joueurs' => 'required|integer|min:0|max:100',
+        'nb_joueurs_random' => 'required|integer|min:0|max:100',
+        'numeros.*' => 'required|integer|between:1,49',
+        'etoiles.*' => 'required|integer|between:1,9',
+    ]);
+
+    // Créer le joueur principal
+    $joueur = Joueur::create(['username' => $data['username']]);
+
+    // Créer le ticket pour le joueur principal
+    Ticket::create([
+        'id_joueur' => $joueur->id,
+        'numeros' => json_encode($data['numeros']),
+        'etoiles' => json_encode($data['etoiles']),
+    ]);
+
+    // Si l'utilisateur souhaite générer des joueurs aléatoires
+    if ($data['nb_joueurs_random'] > 0) {
+        // Appeler la méthode pour générer les joueurs
+        $this->players_generator($data['nb_joueurs_random']);
+    }
+
+    // Redirection après succès
+    return redirect()->route('soumettreForm')->with('success', 'Ton ticket a bien été enregistré !');
+}
+ }*/
+
+ public function soumettreForm(Request $request)
+{
+    // Validation des données soumises
+    $data = $request->validate([
+        'username' => 'required|string|max:255',
+        'numeros' => 'required|array|size:5',
+        'etoiles' => 'required|array|size:2',
+        'nb_joueurs_random' => 'required|integer|min:0|max:100',
+        'nb_joueurs'=> 'required|integer|min:0|max:100',
+        'numeros.*' => 'required|integer|between:1,49',
+        'etoiles.*' => 'required|integer|between:1,9',
+    ]);
+
+    // Démarrer une transaction
+    DB::beginTransaction();
+    try {
+        // Créer le joueur principal
+        $joueur = Joueur::create(['username' => $data['username']]);
+
+        // Créer le ticket pour le joueur principal
+        Ticket::create([
+            'id_joueur' => $joueur->id,
+            'numeros' => json_encode($data['numeros']),
+            'etoiles' => json_encode($data['etoiles']),
+        ]);
+
+        // Si l'utilisateur souhaite générer des joueurs aléatoires
+        if ($data['nb_joueurs_random'] > 0) {
+            // Appeler la méthode pour générer les joueurs
+            $joueurs = $this->players_generator($data['nb_joueurs_random']);
+            session(['joueurs' => $joueurs]); // Stockez les joueurs dans la session
+        }
+
+        // Valider la transaction
+        DB::commit();
+
+        // Redirection après succès
+        return redirect()->route('classement')->with('success', 'Ton ticket a bien été enregistré !');
+
+    } catch (\Exception $e) {
+        // Annuler la transaction si une erreur survient
+        DB::rollback();
+        \Log::error('Erreur lors de la soumission : ' . $e->getMessage());
+        return redirect()->route('jouer_en_ligne')->withErrors('Une erreur est survenue. Veuillez réessayer.');
+    }
+}
+    
 
     public function generer_etoiles(){
         $etoiles=[];
@@ -60,7 +142,6 @@ class TicketController extends Controller{
                 $etoiles[]=$e;
             }
         }
-
         sort($etoiles);
         return $etoiles;
     }
@@ -78,17 +159,14 @@ class TicketController extends Controller{
         return $numeros;
     }
 
-
     public function generer_nom(){
         $noms=["Josh","Victoire","India","Axeeel","Ellen","Kavu","Alex","Ramir","Ines","Sofiane","Djib","Fuuuull"];
         $n = array_rand($noms);
         return $noms[$n];
     }
 
-
-    public function players_generator(Request $request){
+    /*public function players_generator(Request $request){
         $nb_joueurs=$request->input('nb_joueurs');
-
         $joueurs=[];
 
         for($i=0;$i<$nb_joueurs;$i++){
@@ -98,9 +176,8 @@ class TicketController extends Controller{
             'numeros'=>$this->generer_numeros(),
             ];
 
-
             $j = Joueur::create([
-                'username'=>$joueurs['username'],
+                'username'=>$joueurs[$i]['username'],
             ]);
 
             Ticket::create([
@@ -109,14 +186,38 @@ class TicketController extends Controller{
                 'numeros'=>json_encode($joueurs[$i]['numeros']),
             ]);
 
-
-    
-
             \Log::info('Joueurs générés :', $joueurs);
         }
 
         return redirect()->route('classement')->with('joueurs',$joueurs);
+    }*/
+
+    public function players_generator($nb_joueurs)
+    {
+        $joueurs = [];
+    
+        for ($i = 0; $i < $nb_joueurs; $i++) {
+            $joueurs[] = [
+                'username' => $this->generer_nom(),
+                'etoiles' => $this->generer_etoiles(),
+                'numeros' => $this->generer_numeros(),
+            ];
+    
+            $j = Joueur::create(['username' => $joueurs[$i]['username']]);
+    
+            Ticket::create([
+                'id_joueur' => $j->id,
+                'etoiles' => json_encode($joueurs[$i]['etoiles']),
+                'numeros' => json_encode($joueurs[$i]['numeros']),
+            ]);
+        }
+    
+        \Log::info('Joueurs générés :', $joueurs);
+        
+        // Vous pouvez retourner la liste des joueurs générés si besoin
+        return $joueurs;
     }
+    
 
 
     public function generer_ticket_gagnant(){

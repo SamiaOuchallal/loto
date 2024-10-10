@@ -17,4 +17,8 @@ class Joueur extends Model
         return $this->hasMany(Ticket::class,'id_joueur');
     }
 
+    public function id_joueur(){
+        return $this->id;
+    }
+
 }
