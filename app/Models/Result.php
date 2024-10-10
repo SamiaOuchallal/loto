@@ -9,7 +9,7 @@ class Result extends Model
 {
     use HasFactory;
 
-    protected $table='results'; /*table dans la bdd */
+    protected $table='results';
 
     protected $fillable = ['numeros_matches','etoiles_matches','score'];
 

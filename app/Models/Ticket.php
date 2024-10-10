@@ -9,7 +9,7 @@ class Ticket extends Model{
 
     use HasFactory;
 
-    protected $table='tickets'; /*table tickets dans la bdd */
+    protected $table='tickets';
 
     protected $fillable = ['id_joueur','numeros','etoiles'];
 

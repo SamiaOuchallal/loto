@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Joueur extends Model
 {
     use HasFactory;
-    protected $table='joueurs'; /*table tickets dans la bdd */
+    
+    protected $table='joueurs';
 
     protected $fillable = ['username'];
 
