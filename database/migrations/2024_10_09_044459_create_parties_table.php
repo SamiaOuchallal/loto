@@ -1,29 +1,32 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreatePartiesTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('parties', function (Blueprint $table) {
-            $table->id('id_partie');
-            $table->string('numeros_gagnants');
-            $table->string('etoiles_gagnantes');
+            $table->id();
+            $table->json('numeros_gagnants');
+            $table->json('etoiles_gagnantes');
             $table->timestamps();
+        });
+
+        // Ajout de la relation entre tickets et parties
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->foreignId('id_partie')->constrained('parties')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->dropForeign(['id_partie']);
+            $table->dropColumn('id_partie');
+        });
+
         Schema::dropIfExists('parties');
     }
-};
+}

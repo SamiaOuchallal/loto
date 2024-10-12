@@ -6,9 +6,6 @@ use Illuminate\Http\Request;
 
 class PartieController extends Controller{
 
-    public function lancerPartie(){
-        
-    }
 
 
 }

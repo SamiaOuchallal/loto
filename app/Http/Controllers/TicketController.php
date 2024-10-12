@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Http\Controllers\ClassementController;
 use App\Models\Ticket;
+use App\Models\Partie;
 use App\Models\Joueur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,8 +15,12 @@ class TicketController extends Controller{
     }
 
 
- public function soumettreForm(Request $request)
-{
+ public function soumettreForm(Request $request){
+
+    $request->merge([
+        'numeros' => json_decode($request->input('numeros'), true),
+        'etoiles' => json_decode($request->input('etoiles'), true),
+    ]);
     // Validation des données soumises
     $data = $request->validate([
         'username' => 'required|string|max:255',
@@ -31,14 +36,16 @@ class TicketController extends Controller{
     DB::beginTransaction();
     try {
         // Créer le joueur
-        $joueur = Joueur::create(['username' => $data['username']]);
+
+       $joueur = Joueur::create(['username' => $data['username']]);
 
         // Créer le ticket pour le joueur
         Ticket::create([
             'id_joueur' => $joueur->id,
-            'numeros' => json_encode($data['numeros']),
-            'etoiles' => json_encode($data['etoiles']),
+            'numeros' => json_encode($data['numeros']), // Assurez-vous de convertir en JSON ici
+            'etoiles' => json_encode($data['etoiles']), // Assurez-vous de convertir en JSON ici
         ]);
+        
 
         // Si l'utilisateur souhaite générer des joueurs aléatoires
         if ($data['nb_joueurs_random'] > 0) {
@@ -46,6 +53,10 @@ class TicketController extends Controller{
             $joueurs = $this->players_generator($data['nb_joueurs_random']);
             session(['joueurs' => $joueurs]); // Stockez les joueurs dans la session
         }
+
+        $this->lancerPartie();
+
+        \Log::info('Données envoyées : ', $request->all());
 
         // Valider la transaction
         DB::commit();
@@ -56,7 +67,7 @@ class TicketController extends Controller{
     } catch (\Exception $e) {
         // Annuler la transaction si erreur
         DB::rollback();
-        \Log::error('Erreur lors de la soumission : ' . $e->getMessage());
+        \Log::error('Erreur lors de la soumission: ' . $e->getMessage());
         return redirect()->route('jouer_en_ligne')->withErrors('Une erreur est survenue. Veuillez réessayer.');
     }
 }
@@ -129,13 +140,24 @@ class TicketController extends Controller{
     }
 
 
-    public function calcul_score(){
-
+    // Dans la méthode soumettreForm ou lancerPartie
+    public function lancerPartie()
+    {
+        // Générer un ticket gagnant
+        $ticketGagnant = $this->generer_ticket_gagnant();
+    
+        // Créer la partie avec les numéros et étoiles gagnants
+        $partie = Partie::create([
+            'numeros_gagnants' => json_encode($ticketGagnant['numeros']), // Encodez en JSON
+            'etoiles_gagnantes' => json_encode($ticketGagnant['etoiles']), // Encodez en JSON
+        ]);
+    
+        // Optionnel : Rediriger vers la page de classement après avoir lancé la partie
+        return redirect()->route('classement')->with('success', 'La nouvelle partie a été lancée avec succès !');
     }
-
-    public function classer_score(){
-        
-    }
+    
+    
+    
     
 
 }

@@ -23,7 +23,8 @@ class Ticket extends Model{
     }
 
     public function partie(){
-        return $this->belongsTo(Partie::class,'id_partie');
+        return $this->belongsTo(Partie::class, 'id_partie');
     }
+    
 
 }

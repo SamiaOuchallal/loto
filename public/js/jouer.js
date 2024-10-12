@@ -134,17 +134,19 @@ document.getElementById('grille_validation').addEventListener('click', function(
     // Mettre à jour les champs cachés avant de soumettre le formulaire
     updateNumerosInput();
     updateEtoilesInput();
-    alert('Grille validée, vous pouvez lancer la partie.');
 });
 
-// Soumettre le formulaire lors du clic sur "Lancer la partie"
+
+
 document.getElementById('jouer_form').addEventListener('submit', function(e) {
-    // Vérifier que les numéros et étoiles sont bien remplis
     const numeros = document.getElementById('numeros_input').value;
     const etoiles = document.getElementById('etoiles_input').value;
 
+    console.log('Numéros:', numeros);  // Vérifie les valeurs dans la console
+    console.log('Étoiles:', etoiles);
+
     if (numeros === '[]' || etoiles === '[]') {
-       // Empêcher la soumission si la grille est vide
+        e.preventDefault();  // Empêcher la soumission si la grille est vide
         alert('Veuillez sélectionner 5 numéros et 2 étoiles avant de lancer la partie.');
     }
 });
