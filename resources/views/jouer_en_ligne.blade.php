@@ -26,7 +26,7 @@
                 <h4>Commence par entrer un surnom qui te correspond ou génère-le aléatoirement !</h4>
 
                 <label for="name">Ton surnom:</label>
-                <input type="text" id="name" name="username" required />
+                <input type="text" id="name" name="username" />
                 <button class="validation" type="button">Valider</button>
 
                 <label for="random_name">Génère-le:</label>
