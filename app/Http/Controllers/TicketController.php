@@ -14,13 +14,16 @@ class TicketController extends Controller{
         return view('jouer_en_ligne');
     }
 
+public function soumettreForm(Request $request) {
+    // Initialiser $joueurs comme un tableau vide
+    $joueurs = [];
 
- public function soumettreForm(Request $request){
-
+    // Décodage des numéros et étoiles en tableaux
     $request->merge([
         'numeros' => json_decode($request->input('numeros'), true),
         'etoiles' => json_decode($request->input('etoiles'), true),
     ]);
+
     // Validation des données soumises
     $data = $request->validate([
         'username' => 'required|string|max:255',
@@ -35,28 +38,56 @@ class TicketController extends Controller{
     // Démarrer une transaction
     DB::beginTransaction();
     try {
-        // Créer le joueur
+        // 1. Créer le ticket gagnant
+        $ticketGagnant = $this->generer_ticket_gagnant(); // Générez le ticket gagnant ici
 
-       $joueur = Joueur::create(['username' => $data['username']]);
-
-        // Créer le ticket pour le joueur
-        Ticket::create([
-            'id_joueur' => $joueur->id,
-            'numeros' => json_encode($data['numeros']), // Assurez-vous de convertir en JSON ici
-            'etoiles' => json_encode($data['etoiles']), // Assurez-vous de convertir en JSON ici
+        // 2. Créer la partie avec les numéros et étoiles gagnants
+        $partie = Partie::create([
+            'numeros_gagnants' => json_encode($ticketGagnant['numeros']),
+            'etoiles_gagnantes' => json_encode($ticketGagnant['etoiles']),
         ]);
+        \Log::info('Partie créée avec ID : ' . $partie->id);
         
 
-        // Si l'utilisateur souhaite générer des joueurs aléatoires
-        if ($data['nb_joueurs_random'] > 0) {
-            // Appeler la méthode pour générer les joueurs
-            $joueurs = $this->players_generator($data['nb_joueurs_random']);
-            session(['joueurs' => $joueurs]); // Stockez les joueurs dans la session
+        // Assurez-vous que l'ID de la partie est bien généré
+        if (!$partie->id) {
+            throw new \Exception('L\'ID de la partie n\'a pas été généré.');
         }
 
-        $this->lancerPartie();
+        // Loguer l'ID de la partie pour vérifier
+        \Log::info('ID de la partie créée: ' . $partie->id);
+
+        // 3. Créer le joueur et l'associer à la partie
+        $joueur = Joueur::create([
+            'username' => $data['username'],
+            'id_partie' => $partie->id, // Assurez-vous que l'ID de la partie est bien associé
+        ]);
+
+        // 4. Créer le ticket pour le joueur en incluant l'ID de la partie
+        $ticket = Ticket::create([
+            'id_joueur' => $joueur->id,
+            'id_partie' => $partie->id,  // Associer le ticket à la partie
+            'numeros' => json_encode($data['numeros']),
+            'etoiles' => json_encode($data['etoiles']),
+        ]);
+
+        // Loguer l'insertion du ticket
+        \Log::info('Ticket créé: ', $ticket->toArray());
+
+        // 5. Si l'utilisateur souhaite générer des joueurs aléatoires
+        if ($data['nb_joueurs_random'] > 0) {
+            $joueurs = $this->players_generator($data['nb_joueurs_random'], $partie->id);
+            session(['joueurs' => $joueurs]); // Stocker les joueurs dans la session
+        } else {
+            $joueurs = [];
+        }
 
         \Log::info('Données envoyées : ', $request->all());
+
+        // Loguer les joueurs si présents
+        if (isset($joueurs)) {
+            \Log::info('Joueurs récupérés : ', $joueurs);
+        }
 
         // Valider la transaction
         DB::commit();
@@ -102,28 +133,36 @@ class TicketController extends Controller{
         return $noms[$n];
     }
 
-    public function players_generator($nb_joueurs)
-    {
-        $joueurs = [];
+    public function players_generator($nb_joueurs, $id_partie){
+        $joueurs = []; // Liste des joueurs générés
+        
         for ($i = 0; $i < $nb_joueurs; $i++) {
+            // Générer les infos du joueur
             $joueurs[] = [
                 'username' => $this->generer_nom(),
                 'etoiles' => $this->generer_etoiles(),
                 'numeros' => $this->generer_numeros(),
             ];
     
-            $j = Joueur::create(['username' => $joueurs[$i]['username']]);
-    
-            Ticket::create([
-                'id_joueur' => $j->id,
-                'etoiles' => json_encode($joueurs[$i]['etoiles']),
-                'numeros' => json_encode($joueurs[$i]['numeros']),
+            // Créer le joueur
+            $joueur = Joueur::create([
+                'username' => $joueurs[$i]['username'],
+                'id_partie' => $id_partie,  // Associer le joueur à la partie en cours
             ]);
+    
+            // Créer le ticket et l'associer à la partie et au joueur
+            Ticket::create([
+                'id_joueur' => $joueur->id, // Associer le joueur au ticket
+                'id_partie' => $id_partie,   // Associer le ticket à la partie
+                'etoiles' => json_encode($joueurs[$i]['etoiles']), // Convertir en JSON
+                'numeros' => json_encode($joueurs[$i]['numeros']), // Convertir en JSON
+            ]);
+    
+            \Log::info('Ticket créé pour le joueur ' . $joueur->id . ' avec id_partie ' . $id_partie);
+            
         }
     
-        \Log::info('Joueurs générés :', $joueurs);
-        
-        // Liste des joueurs générés
+        // Retourner la liste des joueurs générés
         return $joueurs;
     }
     
@@ -140,24 +179,25 @@ class TicketController extends Controller{
     }
 
 
-    // Dans la méthode soumettreForm ou lancerPartie
-    public function lancerPartie()
+    public function lancerPartie($idPartie)
     {
         // Générer un ticket gagnant
         $ticketGagnant = $this->generer_ticket_gagnant();
     
-        // Créer la partie avec les numéros et étoiles gagnants
-        $partie = Partie::create([
-            'numeros_gagnants' => json_encode($ticketGagnant['numeros']), // Encodez en JSON
-            'etoiles_gagnantes' => json_encode($ticketGagnant['etoiles']), // Encodez en JSON
-        ]);
+        // Assurez-vous que les numéros et étoiles sont présents
+        $numerosGagnants = json_encode($ticketGagnant['numeros']);
+        $etoilesGagnantes = json_encode($ticketGagnant['etoiles']); // Vérifiez ici que les étoiles sont générées
+    
+        // Créer ou mettre à jour la partie avec les numéros et étoiles gagnants
+        $partie = Partie::find($idPartie);
+        if ($partie) {
+            $partie->numeros_gagnants = $numerosGagnants;
+            $partie->etoiles_gagnantes = $etoilesGagnants;
+            $partie->save();
+        }
     
         // Optionnel : Rediriger vers la page de classement après avoir lancé la partie
         return redirect()->route('classement')->with('success', 'La nouvelle partie a été lancée avec succès !');
     }
-    
-    
-    
-    
 
 }

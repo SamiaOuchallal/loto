@@ -20,18 +20,13 @@
     <main>
         <h1>Bienvenue sur nos classements !</h1>
         <h2>Classement des 10 premiers joueurs</h2>
-      
-      
-        @if(isset($ticketGagnant))
-    <p><strong>Numéros gagnants :</strong> {{ implode(', ', $partie->numeros_gagnants) }}</p>
-    <p><strong>Étoiles gagnantes :</strong> {{ implode(', ', $partie->etoiles_gagnantes) }}</p>
-@else
-    <p>Il n'y a pas de ticket gagnant pour cette partie.</p>
-@endif
 
-
-
-
+        @if(isset($numerosGagnants) && isset($etoilesGagnantes))
+            <p><strong>Numéros gagnants :</strong> {{ implode(', ', $numerosGagnants) }}</p>
+            <p><strong>Étoiles gagnantes :</strong> {{ implode(', ', $etoilesGagnantes) }}</p>
+        @else
+            <p>Il n'y a pas de ticket gagnant pour cette partie.</p>
+        @endif
 
         @if(!isset($joueursTries) || $joueursTries->isEmpty())
             <p>Aucun joueur n'a encore été classé.</p>

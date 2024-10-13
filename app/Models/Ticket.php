@@ -11,7 +11,12 @@ class Ticket extends Model{
 
     protected $table='tickets';
 
-    protected $fillable = ['id_joueur','numeros','etoiles'];
+    protected $fillable = [
+        'id_joueur',
+        'id_partie',
+        'numeros',
+        'etoiles',
+    ];
 
     protected $casts=[
         'numeros' =>'array',

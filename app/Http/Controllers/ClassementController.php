@@ -9,35 +9,35 @@ use App\Models\Partie;
 use App\Http\Controllers\TicketController;
 
 class ClassementController extends Controller{
-    public function classement_joueurs()
+
+public function classement_joueurs()
 {
-    // Récupérer le dernier ticket gagnant
-    $ticketGagnant = Ticket::orderBy('created_at', 'desc')->first(); // Récupère le dernier ticket créé
+    // Récupérer la dernière partie jouée
+    $dernierePartie = Partie::latest()->first(); 
 
-    // Récupérer tous les joueurs avec leur ticket
-    $joueurs = Joueur::with('ticket')->get(); // Assurez-vous de récupérer le ticket du joueur
+    if (!$dernierePartie) {
+        return view('classement')->with('message', 'Aucune partie n\'a encore été jouée.');
+    }
+    // Récupérer tous les joueurs de la dernière partie avec leur ticket
+    $joueurs = Joueur::with('ticket')->where('id_partie', $dernierePartie->id)->get();
+    
 
-    // Logique pour calculer les scores
+    // Calculer les scores pour chaque joueur
     foreach ($joueurs as $joueur) {
-        // Calculer le score basé sur le ticket
         $joueur->score = $this->calculerScore($joueur);
     }
 
     // Trier les joueurs par score descendant et prendre les 10 premiers
     $joueursTries = $joueurs->sortByDesc('score')->take(10);
 
-    // Récupérer la dernière partie
-    $partie = Partie::orderBy('created_at', 'desc')->first();
-
-    // Décoder les numéros gagnants et étoiles gagnantes
-    $partie->numeros_gagnants = json_decode($partie->numeros_gagnants, true);
-    $partie->etoiles_gagnantes = json_decode($partie->etoiles_gagnantes, true);
-
-    // Passer les joueurs triés et le ticket gagnant à la vue
-    return view('classement', compact('joueursTries', 'ticketGagnant', 'partie'));
+    // Passer les joueurs triés et les numéros/étoiles gagnants à la vue
+    return view('classement', [
+        'joueursTries' => $joueursTries,
+        'numerosGagnants' => json_decode($dernierePartie->numeros_gagnants, true),
+        'etoilesGagnantes' => json_decode($dernierePartie->etoiles_gagnantes, true),
+    ]);
 }
 
-    
 
 public function generer_etoiles(){
     $etoiles=[];
@@ -75,7 +75,6 @@ public function generer_ticket_gagnant(){
     return $ticket_gagnant;
 }
 
-
 private function calculerScore($joueur)
 {
     // Obtenez le ticket du joueur
@@ -86,9 +85,16 @@ private function calculerScore($joueur)
         return 0; // Aucun ticket, score = 0
     }
 
-    // Numéros et étoiles gagnants fictifs
-    $numGagnants = [1, 5, 9, 23, 48];
-    $etoilesGagnantes = [2, 6];
+    // Récupérer la dernière partie jouée
+    $dernierePartie = Partie::latest()->first(); 
+
+    if (!$dernierePartie) {
+        return 0; // Pas de partie, pas de score
+    }
+
+    // Obtenez les numéros et étoiles gagnants de la dernière partie
+    $numGagnants = json_decode($dernierePartie->numeros_gagnants, true);
+    $etoilesGagnantes = json_decode($dernierePartie->etoiles_gagnantes, true);
 
     // Assurez-vous que les numéros et étoiles du ticket sont bien décodés en tant que tableaux
     $numeros = is_array($ticket->numeros) ? $ticket->numeros : json_decode($ticket->numeros, true);
@@ -100,7 +106,5 @@ private function calculerScore($joueur)
 
     return $scoreNumeros + $scoreEtoiles; // Somme des correspondances
 }
-
-
     
 }
