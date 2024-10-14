@@ -1,152 +1,163 @@
-let nomsRandom=["Ines","Victoire","Hassan","Emiliedu78","Véroooo"]; /* Avoir plus de noms, et vérifier si le nom entré n'est pas déjà pris*/
+let nomsRandom = ["Ines", "Victoire", "Hassan", "Emiliedu78", "Véroooo"];
 
-document.addEventListener('DOMContentLoaded',function(){
-
+document.addEventListener('DOMContentLoaded', function () {
     const boutongenerer = document.querySelector('.generate');
-    const input= document.getElementById('name');
-    const validation=document.querySelector('.validation');
-    const text_validate=document.getElementById('validate_text');
+    const input = document.getElementById('name');
+    const validation = document.querySelector('.validation');
+    const text_validate = document.getElementById('validate_text');
 
+    let numeros = [];
+    let etoiles = [];
 
-    boutongenerer.addEventListener('click', function(){
-        const rand=Math.floor(Math.random()*nomsRandom.length);
-        input.value=nomsRandom[rand];
-    })
+    const bouton_numero = document.querySelectorAll('.numero');
+    const num_choisi = document.getElementById('numeros_choisi');
 
-    validation.addEventListener('click',function(){
-        const username=input.value.trim();
+    const bouton_etoile = document.querySelectorAll('.etoile');
+    const etoile_choisi = document.getElementById('etoiles_choisi');
 
-        if (username){
-            text_validate.textContent='Bienvenue '+ username +', super nom !'
-        } else {
-            text_validate.textContent="Eh, choisis un nom d'abord !";
+    const valider_grille = document.getElementById('grille_validation');
+    const valider_grille_text = document.getElementById('grille_validation_text');
+
+    // Fonction pour générer des nombres aléatoires uniques
+    function generateRandomNumbers(count, max) {
+        let numbers = [];
+        while (numbers.length < count) {
+            let num = Math.floor(Math.random() * max) + 1;
+            if (!numbers.includes(num)) {
+                numbers.push(num);
+            }
         }
-    })
-})
+        return numbers.sort((a, b) => a - b); // On trie les nombres pour un affichage plus lisible
+    }
 
-let numeros = [];
-let etoiles = [];
+    // Réinitialiser toutes les sélections actuelles (numéros et étoiles)
+    function resetSelections() {
+        document.querySelectorAll('.selected').forEach(bouton => bouton.classList.remove('selected'));
+        document.getElementById('numeros_choisi').textContent = '';
+        document.getElementById('etoiles_choisi').textContent = '';
+        numeros = [];
+        etoiles = [];
+    }
 
-const bouton_numero = document.querySelectorAll('.numero');
-const num_choisi = document.getElementById('numeros_choisi');
+    // Fonction pour mettre à jour les champs cachés
+    function updateHiddenFields() {
+        document.getElementById('numeros_input').value = JSON.stringify(numeros);
+        document.getElementById('etoiles_input').value = JSON.stringify(etoiles);
+    }
 
-const bouton_etoile = document.querySelectorAll('.etoile');
-const etoile_choisi = document.getElementById('etoiles_choisi');
+    // Générer un nom aléatoire
+    boutongenerer.addEventListener('click', function () {
+        const rand = Math.floor(Math.random() * nomsRandom.length);
+        input.value = nomsRandom[rand];
+    });
 
-const valider_grille = document.getElementById('grille_validation');
-const valider_grille_text = document.getElementById('grille_validation_text');
-
-// Gérer la sélection des numéros
-bouton_numero.forEach(bouton => {
-    bouton.addEventListener('click', function() {
-        const n = parseInt(this.getAttribute('data-value'));
-        
-        if (numeros.includes(n)) {
-            alert("Ce numéro est déjà choisi !");
+    // Valider le nom d'utilisateur
+    validation.addEventListener('click', function () {
+        const username = input.value.trim();
+        if (username) {
+            text_validate.textContent = 'Bienvenue ' + username + ', super nom !';
         } else {
+            text_validate.textContent = "Eh, choisis un nom d'abord !";
+        }
+    });
+
+    // Gérer la sélection manuelle des numéros
+    bouton_numero.forEach(bouton => {
+        bouton.addEventListener('click', function () {
+            const n = parseInt(this.getAttribute('data-value'));
+            if (numeros.includes(n)) {
+                alert("Ce numéro est déjà choisi !");
+                return;
+            }
             if (numeros.length < 5) {
                 numeros.push(n);
                 num_choisi.textContent = numeros.join(", ");
+                this.classList.add('selected');
             } else {
                 alert("Tu as déjà choisi 5 numéros !");
             }
-        }
+        });
     });
-});
 
-// Gérer la sélection des étoiles
-bouton_etoile.forEach(bouton => {
-    bouton.addEventListener('click', function() {
-        const n = parseInt(this.getAttribute('data-value'));
-
-        if (etoiles.includes(n)) {
-            alert("Cette étoile est déjà choisie !");
-        } else {
+    // Gérer la sélection manuelle des étoiles
+    bouton_etoile.forEach(bouton => {
+        bouton.addEventListener('click', function () {
+            const n = parseInt(this.getAttribute('data-value'));
+            if (etoiles.includes(n)) {
+                alert("Cette étoile est déjà choisie !");
+                return;
+            }
             if (etoiles.length < 2) {
                 etoiles.push(n);
                 etoile_choisi.textContent = etoiles.join(", ");
+                this.classList.add('selected');
             } else {
                 alert("Tu as déjà choisi 2 étoiles !");
             }
+        });
+    });
+
+    // Valider la grille
+    valider_grille.addEventListener('click', function () {
+        if (numeros.length === 5 && etoiles.length === 2) {
+            valider_grille_text.textContent = "Super, votre composition est validée !";
+            updateHiddenFields();
+        } else {
+            valider_grille_text.textContent = "Zut ... Il manque quelque chose ? Revoyez votre composition !";
         }
     });
-});
 
-// Valider la grille
-valider_grille.addEventListener('click', function() {
-    if (numeros.length === 5 && etoiles.length === 2) {
-        valider_grille_text.textContent = "Super, votre composition est validée !";
+    // Gestion de la soumission du formulaire
+    document.getElementById('jouer_form').addEventListener('submit', function (e) {
+        updateHiddenFields();  // Assurez-vous que les champs sont à jour
+
+        const participate = document.getElementById('participate');
+
+        // Vérification finale avant soumission
+        if (participate.checked) {
+            // Si l'utilisateur veut participer, vérifiez la sélection
+            if (numeros.length !== 5 || etoiles.length !== 2) {
+                e.preventDefault();
+                alert('Veuillez sélectionner 5 numéros et 2 étoiles avant de lancer la partie.');
+            }
+        }
+    });
+
+    // Afficher/Masquer les champs de participation
+    const participate = document.getElementById('participate');
+    participate.addEventListener('change', function () {
+        const participationFields = document.getElementById('participation_fields');
+        participationFields.style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Génération aléatoire des numéros et étoiles
+    const boutonGenererGrille = document.getElementById('generer-grille');
+
+    boutonGenererGrille.addEventListener('click', function () {
+        resetSelections(); // Réinitialiser les sélections actuelles
+
+        // Générer 5 numéros aléatoires uniques entre 1 et 49
+        numeros = generateRandomNumbers(5, 49);  // Mise à jour du tableau 'numeros'
+        // Générer 2 étoiles aléatoires uniques entre 1 et 9
+        etoiles = generateRandomNumbers(2, 9);   // Mise à jour du tableau 'etoiles'
+
+        // Appliquer les sélections aux boutons des numéros
+        numeros.forEach(numero => {
+            const bouton = document.querySelector(`#numeros button[data-value="${numero}"]`);
+            if (bouton) bouton.classList.add('selected');
+        });
+
+        // Appliquer les sélections aux boutons des étoiles
+        etoiles.forEach(etoile => {
+            const bouton = document.querySelector(`#etoiles button[data-value="${etoile}"]`);
+            if (bouton) bouton.classList.add('selected');
+        });
+
+        // Mettre à jour les affichages
+        document.getElementById('numeros_choisi').textContent = numeros.join(', ');
+        document.getElementById('etoiles_choisi').textContent = etoiles.join(', ');
 
         // Mettre à jour les champs cachés
-        document.getElementById('numeros_input').value = JSON.stringify(numeros);
-        document.getElementById('etoiles_input').value = JSON.stringify(etoiles);
-
-    } else {
-        valider_grille_text.textContent = "Zut ... Il manque quelque chose ? Revoyez votre composition !";
-    }
-});
-
-
-
-document.querySelectorAll('.numero').forEach(button => {
-    button.addEventListener('click', function() {
-        // Limiter la sélection à 5 numéros
-        const selectedNumbers = Array.from(document.querySelectorAll('.numero.selected'));
-        if (selectedNumbers.length < 5 || this.classList.contains('selected')) {
-            this.classList.toggle('selected'); // Ajouter ou enlever la classe 'selected'
-            updateNumerosInput(); // Mettre à jour le champ caché avec les numéros sélectionnés
-        }
+        updateHiddenFields();
     });
-});
-
-// Ajouter un événement de clic à tous les boutons d'étoile
-document.querySelectorAll('.etoile').forEach(button => {
-    button.addEventListener('click', function() {
-        // Limiter la sélection à 2 étoiles
-        const selectedStars = Array.from(document.querySelectorAll('.etoile.selected'));
-        if (selectedStars.length < 2 || this.classList.contains('selected')) {
-            this.classList.toggle('selected'); // Ajouter ou enlever la classe 'selected'
-            updateEtoilesInput(); // Mettre à jour le champ caché avec les étoiles sélectionnées
-        }
-    });
-});
-
-// Mettre à jour le champ caché pour les numéros
-function updateNumerosInput() {
-    const numerosChoisis = [];
-    document.querySelectorAll('.numero.selected').forEach(button => {
-        numerosChoisis.push(button.dataset.value);
-    });
-    document.getElementById('numeros_input').value = JSON.stringify(numerosChoisis);
-}
-
-// Mettre à jour le champ caché pour les étoiles
-function updateEtoilesInput() {
-    const etoilesChoisies = [];
-    document.querySelectorAll('.etoile.selected').forEach(button => {
-        etoilesChoisies.push(button.dataset.value);
-    });
-    document.getElementById('etoiles_input').value = JSON.stringify(etoilesChoisies);
-}
-
-// Valider la grille lors du clic sur "Valider ma grille"
-document.getElementById('grille_validation').addEventListener('click', function() {
-    // Mettre à jour les champs cachés avant de soumettre le formulaire
-    updateNumerosInput();
-    updateEtoilesInput();
-});
-
-
-
-document.getElementById('jouer_form').addEventListener('submit', function(e) {
-    const numeros = document.getElementById('numeros_input').value;
-    const etoiles = document.getElementById('etoiles_input').value;
-
-    console.log('Numéros:', numeros);  // Vérifie les valeurs dans la console
-    console.log('Étoiles:', etoiles);
-
-    if (numeros === '[]' || etoiles === '[]') {
-        e.preventDefault();  // Empêcher la soumission si la grille est vide
-        alert('Veuillez sélectionner 5 numéros et 2 étoiles avant de lancer la partie.');
-    }
 });
