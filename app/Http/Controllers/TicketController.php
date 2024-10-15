@@ -90,7 +90,6 @@ class TicketController extends Controller{
         }
     }*/
 
-
     public function soumettreForm(Request $request) {
         // Affichage pour debug
         // dd($request->all());
@@ -128,6 +127,12 @@ class TicketController extends Controller{
             // 1. Créer le ticket gagnant
             $ticketGagnant = $this->generer_ticket_gagnant();
     
+            // Ajoutez ce log pour voir les valeurs avant l'insertion
+            \Log::info('Données pour la création de la partie : ', [
+                'numeros_gagnants' => json_encode($ticketGagnant['numeros']),
+                'etoiles_gagnantes' => json_encode($ticketGagnant['etoiles']),
+            ]);
+    
             // 2. Créer la partie
             $partie = Partie::create([
                 'numeros_gagnants' => json_encode($ticketGagnant['numeros']),
@@ -154,9 +159,36 @@ class TicketController extends Controller{
             // Générer des joueurs aléatoires si demandé
             if ($data['nb_joueurs_random'] > 0) {
                 $joueurs = $this->players_generator($data['nb_joueurs_random'], $partie->id);
+                
+                // Enregistrement des joueurs générés en base de données
+                // Enregistrement des joueurs générés en base de données
+foreach ($joueurs as $joueurData) {
+    // Vérifiez si le joueur existe déjà dans la base de données pour cette partie
+    $existingPlayer = Joueur::where('username', $joueurData['username'])
+                            ->where('id_partie', $partie->id)
+                            ->first();
+
+    if (!$existingPlayer) {
+        // Si le joueur n'existe pas, créez-le
+        $joueur = Joueur::create([
+            'username' => $joueurData['username'],
+            'id_partie' => $partie->id,
+        ]);
+    
+        // Créer un ticket associé au joueur
+        Ticket::create([
+            'id_joueur' => $joueur->id,
+            'id_partie' => $partie->id,
+            'numeros' => json_encode($joueurData['numeros']),
+            'etoiles' => json_encode($joueurData['etoiles']),
+        ]);
+    }
+}
+
+                
                 session(['joueurs' => $joueurs]); // Stocker les joueurs générés
             }
-    
+            
             DB::commit();
     
             return redirect()->route('classement')->with('success', 'Partie lancée avec succès !');
@@ -166,7 +198,8 @@ class TicketController extends Controller{
             \Log::error('Erreur lors de la soumission: ' . $e->getMessage());
             return redirect()->route('jouer_en_ligne')->withErrors('Une erreur est survenue. Veuillez réessayer.');
         }
-    }    
+    }
+    
 
 
     public function generer_etoiles(){

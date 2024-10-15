@@ -24,7 +24,7 @@
         <form id='jouer_form' action="{{ route('soumettreForm') }}" method="POST">
             @csrf
 
-            <!-- Case à cocher pour participer au tirage -->
+            <!-- Case à cocher pour participer -->
             <section>
                 <h4>Souhaitez-vous participer au tirage ?</h4>
                 <label for="participate">
@@ -45,8 +45,8 @@
                 <button class="generate" type="button">Générer</button>
                 <p id="validate_text"></p>
 
+                <button id="generer-grille" type="button" class="btn btn-primary">Générer une grille</button>
                 
-                    <button id="generer-grille" type="button" class="btn btn-primary">Générer une grille</button>
                 <section id="grille">
                     <div>
                         <h4>Compose ta grille !</h4>
@@ -72,7 +72,6 @@
 
                     <button id="grille_validation" type="button">Valider ma grille</button>
                     <p id="grille_validation_text"></p>
-
                 </section>
             </section>
 
@@ -81,6 +80,11 @@
             <input type="number" id="nb_joueurs" name="nb_joueurs" min="0" max="100" required>
             <p>Si oui, entrez le nombre de joueurs :</p>
             <input type="number" id="nb_joueurs_random" name="nb_joueurs_random" min="0" max="100" value="0">
+
+            <button id="validate_players" type="button">Valider le nombre de joueurs</button>
+
+            <!-- Champs pour les joueurs manuels -->
+            <section id="grilles_manuelles"></section>
 
             @if (session('success'))
                 <div class="alert alert-success">
@@ -97,6 +101,8 @@
                     </ul>
                 </div>
             @endif
+
+            <div id="manual_inputs"></div>
 
             <button class="lancer_partie" type="submit">Lancer la partie</button> 
         </form>

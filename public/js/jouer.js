@@ -1,4 +1,5 @@
 let nomsRandom = ["Ines", "Victoire", "Hassan", "Emiliedu78", "Véroooo"];
+let grillesJoueurs = []; // Déclaration globale de grillesJoueurs
 
 document.addEventListener('DOMContentLoaded', function () {
     const boutongenerer = document.querySelector('.generate');
@@ -17,6 +18,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const valider_grille = document.getElementById('grille_validation');
     const valider_grille_text = document.getElementById('grille_validation_text');
+
+    // Inputs pour le nombre de joueurs
+    const nb_joueurs_input = document.getElementById('nb_joueurs');
+    const nb_joueurs_random_input = document.getElementById('nb_joueurs_random');
+    const validatePlayersButton = document.getElementById('validate_players');  // Bouton pour valider le nombre de joueurs
 
     // Fonction pour générer des nombres aléatoires uniques
     function generateRandomNumbers(count, max) {
@@ -109,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Gestion de la soumission du formulaire
     document.getElementById('jouer_form').addEventListener('submit', function (e) {
-        updateHiddenFields();  // Assurez-vous que les champs sont à jour
+        updateHiddenFields(); // Assurez-vous que les champs sont à jour
 
         const participate = document.getElementById('participate');
 
@@ -160,4 +166,135 @@ document.addEventListener('DOMContentLoaded', function () {
         // Mettre à jour les champs cachés
         updateHiddenFields();
     });
+
+    // Validation du nombre de joueurs et joueurs random
+    validatePlayersButton.addEventListener('click', function () {
+        const nb_joueurs = parseInt(nb_joueurs_input.value);
+        const nb_joueurs_random = parseInt(nb_joueurs_random_input.value);
+
+        // Validation des entrées
+        if (isNaN(nb_joueurs) || isNaN(nb_joueurs_random)) {
+            alert('Veuillez entrer des valeurs valides.');
+            return;
+        }
+
+        if (nb_joueurs_random > nb_joueurs) {
+            alert('Le nombre de joueurs random ne peut pas être supérieur au nombre total de joueurs.');
+            return;
+        }
+
+        grillesJoueurs = []; // Réinitialiser les grilles
+
+        // Générer des grilles pour les joueurs random
+        for (let i = 0; i < nb_joueurs_random; i++) {
+            let grille = {
+                numeros: generateRandomNumbers(5, 49),
+                etoiles: generateRandomNumbers(2, 9)
+            };
+            grillesJoueurs.push({
+                nom: nomsRandom[i % nomsRandom.length] + "_random",
+                grille: grille
+            });
+        }
+
+        // Préparer les joueurs manuels
+        const nb_joueurs_manuels = nb_joueurs - nb_joueurs_random;
+        for (let i = 0; i < nb_joueurs_manuels; i++) {
+            grillesJoueurs.push({
+                nom: "Joueur_" + (i + 1),
+                grille: {
+                    numeros: [],
+                    etoiles: []
+                }
+            });
+        }
+
+        // Afficher les grilles manuelles
+        afficherGrillesManuelles(nb_joueurs_manuels);
+    });
 });
+
+// Fonction pour afficher les grilles des joueurs manuels
+function afficherGrillesManuelles(nb_joueurs_manuels) {
+    const manualInputContainer = document.getElementById('manual_inputs');
+
+    if (!manualInputContainer) {
+        console.error("L'élément manual_inputs est introuvable dans le DOM.");
+        return;
+    }
+
+    manualInputContainer.innerHTML = ''; // Réinitialiser le conteneur
+
+    for (let i = 0; i < nb_joueurs_manuels; i++) {
+        const joueur = grillesJoueurs[grillesJoueurs.length - nb_joueurs_manuels + i];
+
+        const joueurDiv = document.createElement('div');
+        joueurDiv.classList.add('grille-utilisateur'); // Ajouter une classe pour le style
+
+        // Créer les boutons pour les numéros
+        let numerosButtons = '';
+        for (let n = 1; n <= 49; n++) {
+            numerosButtons += `<button class="numero" data-value="${n}" type="button">${n}</button>`;
+        }
+
+        // Créer les boutons pour les étoiles
+        let etoilesButtons = '';
+        for (let n = 1; n <= 9; n++) {
+            etoilesButtons += `<button class="etoile" data-value="${n}" type="button">${n}</button>`;
+        }
+
+        joueurDiv.innerHTML = `
+            <h4>${joueur.nom}</h4>
+            <div>
+                <label>Numéros :</label>
+                <span id="numeros_choisi_joueur_${i + 1}">${joueur.grille.numeros.length > 0 ? joueur.grille.numeros.join(', ') : 'À entrer'}</span>
+                <div id="numeros_joueur_${i + 1}">${numerosButtons}</div>
+            </div>
+            <div>
+                <label>Étoiles :</label>
+                <span id="etoiles_choisi_joueur_${i + 1}">${joueur.grille.etoiles.length > 0 ? joueur.grille.etoiles.join(', ') : 'À entrer'}</span>
+                <div id="etoiles_joueur_${i + 1}">${etoilesButtons}</div>
+            </div>
+        `;
+
+        manualInputContainer.appendChild(joueurDiv);
+
+        // Ajouter les écouteurs d'événements aux boutons numéros
+        const numerosButtonsElements = joueurDiv.querySelectorAll('.numero');
+        numerosButtonsElements.forEach(bouton => {
+            bouton.addEventListener('click', function () {
+                const n = parseInt(this.getAttribute('data-value'));
+                if (joueur.grille.numeros.includes(n)) {
+                    alert("Ce numéro est déjà choisi !");
+                    return;
+                }
+                if (joueur.grille.numeros.length < 5) {
+                    joueur.grille.numeros.push(n);
+                    document.getElementById(`numeros_choisi_joueur_${i + 1}`).textContent = joueur.grille.numeros.join(", ");
+                    this.classList.add('selected');
+                } else {
+                    alert("Ce joueur a déjà choisi 5 numéros !");
+                }
+            });
+        });
+
+        // Ajouter les écouteurs d'événements aux boutons étoiles
+        const etoilesButtonsElements = joueurDiv.querySelectorAll('.etoile');
+        etoilesButtonsElements.forEach(bouton => {
+            bouton.addEventListener('click', function () {
+                const n = parseInt(this.getAttribute('data-value'));
+                if (joueur.grille.etoiles.includes(n)) {
+                    alert("Cette étoile est déjà choisie !");
+                    return;
+                }
+                if (joueur.grille.etoiles.length < 2) {
+                    joueur.grille.etoiles.push(n);
+                    document.getElementById(`etoiles_choisi_joueur_${i + 1}`).textContent = joueur.grille.etoiles.join(", ");
+                    this.classList.add('selected');
+                } else {
+                    alert("Ce joueur a déjà choisi 2 étoiles !");
+                }
+            });
+        });
+    }
+}
