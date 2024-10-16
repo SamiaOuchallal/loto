@@ -12,10 +12,11 @@ return new class extends Migration
             $table->id();
             $table->string('username', 50);
             $table->timestamps();
-
-            // Ajout de la colonne id_partie pour lier les joueurs à une partie
-            $table->foreignId('id_partie')->constrained('parties')->onDelete('cascade'); // Relation avec la table parties
+        
+            // Ajout de la colonne id_partie, qui peut être NULL pour l'instant
+            $table->foreignId('id_partie')->nullable()->constrained('parties')->onDelete('cascade');
         });
+        
     }
 
     public function down()

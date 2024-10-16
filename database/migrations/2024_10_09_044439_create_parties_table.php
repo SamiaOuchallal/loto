@@ -9,8 +9,9 @@ class CreatePartiesTable extends Migration
     {
         Schema::create('parties', function (Blueprint $table) {
             $table->id();
-            $table->json('numeros_gagnants'); // Doit être non nul
-            $table->json('etoiles_gagnantes'); // Doit être non nul
+            $table->json('numeros_gagnants');
+            $table->json('etoiles_gagnantes'); 
+            
             $table->timestamps();
         });
     }

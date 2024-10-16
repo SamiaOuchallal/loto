@@ -1,4 +1,13 @@
-let nomsRandom = ["Ines", "Victoire", "Hassan", "Emiliedu78", "Véroooo"];
+let nomsRandom = ["Alpheus", "Brody", "Caelum", "Dax", "Elysia", "Finn", "Galen", "Harper", "Ilias", 
+    "Jaxon", "Kiera", "Lila", "Milo", "Nova", "Orion", "Phaedra", "Quinlan", "Raine", "Soren", "Talia",
+    "Ulysses", "Vesper", "Wren", "Xena", "Yara", "Zephyr", "Anika", "Bodhi", "Cassian", "Delia", 
+    "Emrys", "Freya", "Gideon", "Harlow", "Isla", "Jett", "Kael", "Lyra", "Maxon", "Nyla", "Odin", "Piper", 
+    "Quin", "Rhea", "Sage", "Thorne", "Uma", "Valor", "Wynne", "Xander", "Yvette", "Zuri", "Asher", "Bria",
+    "Caden", "Daria", "Elowen", "Felix", "Greer", "Huxley", "Imani", "Juno", "Kieran", "Livia", "Maverick", 
+    "Niamh", "Oren", "Pippa", "Riven", "Sable", "Tegan", "Uriel", "Vega", "Willa", "Xanthe", "Yasmine", "Zane", 
+    "Aisling", "Beau", "Calla", "Darian", "Elara", "Finley", "Greysen", "Hadley", "Indigo", "Jace", "Kaia", 
+    "Leif", "Maelis", "Niko", "Odette", "Pax", "Quinley", "Riven","Selene", "Taliah", "Ulrich", "Vespera", "Zephyra"
+];
 let grillesJoueurs = []; // Déclaration globale de grillesJoueurs
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -67,41 +76,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Gérer la sélection manuelle des numéros
-    bouton_numero.forEach(bouton => {
-        bouton.addEventListener('click', function () {
-            const n = parseInt(this.getAttribute('data-value'));
-            if (numeros.includes(n)) {
-                alert("Ce numéro est déjà choisi !");
-                return;
-            }
+// Gérer la sélection manuelle des numéros
+bouton_numero.forEach(bouton => {
+    bouton.addEventListener('click', function () {
+        const n = parseInt(this.getAttribute('data-value'));
+
+        // Si le numéro est déjà choisi, le retirer
+        if (numeros.includes(n)) {
+            numeros = numeros.filter(num => num !== n); // Retirer le numéro
+            num_choisi.textContent = numeros.join(", "); // Mettre à jour l'affichage
+            this.classList.remove('selected'); // Retirer la classe sélectionnée
+        } else {
             if (numeros.length < 5) {
                 numeros.push(n);
                 num_choisi.textContent = numeros.join(", ");
-                this.classList.add('selected');
+                this.classList.add('selected'); // Ajouter la classe sélectionnée
             } else {
                 alert("Tu as déjà choisi 5 numéros !");
             }
-        });
+        }
     });
+});
 
-    // Gérer la sélection manuelle des étoiles
-    bouton_etoile.forEach(bouton => {
-        bouton.addEventListener('click', function () {
-            const n = parseInt(this.getAttribute('data-value'));
-            if (etoiles.includes(n)) {
-                alert("Cette étoile est déjà choisie !");
-                return;
-            }
+// Gérer la sélection manuelle des étoiles
+bouton_etoile.forEach(bouton => {
+    bouton.addEventListener('click', function () {
+        const n = parseInt(this.getAttribute('data-value'));
+
+        // Si l'étoile est déjà choisie, la retirer
+        if (etoiles.includes(n)) {
+            etoiles = etoiles.filter(etoile => etoile !== n); // Retirer l'étoile
+            etoile_choisi.textContent = etoiles.join(", "); // Mettre à jour l'affichage
+            this.classList.remove('selected'); // Retirer la classe sélectionnée
+        } else {
             if (etoiles.length < 2) {
                 etoiles.push(n);
                 etoile_choisi.textContent = etoiles.join(", ");
-                this.classList.add('selected');
+                this.classList.add('selected'); // Ajouter la classe sélectionnée
             } else {
                 alert("Tu as déjà choisi 2 étoiles !");
             }
-        });
+        }
     });
+});
+
+
+
 
     // Valider la grille
     valider_grille.addEventListener('click', function () {
@@ -114,20 +134,38 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Gestion de la soumission du formulaire
-    document.getElementById('jouer_form').addEventListener('submit', function (e) {
-        updateHiddenFields(); // Assurez-vous que les champs sont à jour
+// Gestion de la soumission du formulaire
+document.getElementById('jouer_form').addEventListener('submit', function (e) {
+    const participate = document.getElementById('participate');
 
-        const participate = document.getElementById('participate');
+    // Vérifiez d'abord que les champs cachés sont à jour
+    updateHiddenFields();
 
-        // Vérification finale avant soumission
-        if (participate.checked) {
-            // Si l'utilisateur veut participer, vérifiez la sélection
-            if (numeros.length !== 5 || etoiles.length !== 2) {
+    // Vérification finale avant soumission
+    if (participate.checked) {
+        // Si l'utilisateur veut participer, vérifiez la sélection
+        if (numeros.length !== 5 || etoiles.length !== 2) {
+            e.preventDefault();
+            alert('Veuillez sélectionner 5 numéros et 2 étoiles avant de lancer la partie.');
+        }
+
+        // Vérifiez également que tous les joueurs manuels ont des numéros et étoiles valides
+        for (let i = 0; i < grillesJoueurs.length; i++) {
+            const joueur = grillesJoueurs[i];
+            if (joueur.grille.numeros.length !== 5 || joueur.grille.etoiles.length !== 2) {
                 e.preventDefault();
-                alert('Veuillez sélectionner 5 numéros et 2 étoiles avant de lancer la partie.');
+                alert(`Le joueur ${joueur.nom} doit avoir 5 numéros et 2 étoiles.`);
+                break;
             }
         }
-    });
+
+        // Ajout des grilles des joueurs manuels dans le champ caché
+        const grillesInput = document.getElementById('grilles_joueurs');
+        grillesInput.value = JSON.stringify(grillesJoueurs);
+    }
+});
+
+
 
     // Afficher/Masquer les champs de participation
     const participate = document.getElementById('participate');
@@ -215,6 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // Fonction pour afficher les grilles des joueurs manuels
+// Function to display the manual players' grids
 function afficherGrillesManuelles(nb_joueurs_manuels) {
     const manualInputContainer = document.getElementById('manual_inputs');
 
@@ -223,21 +262,21 @@ function afficherGrillesManuelles(nb_joueurs_manuels) {
         return;
     }
 
-    manualInputContainer.innerHTML = ''; // Réinitialiser le conteneur
+    manualInputContainer.innerHTML = ''; // Reset the container
 
     for (let i = 0; i < nb_joueurs_manuels; i++) {
         const joueur = grillesJoueurs[grillesJoueurs.length - nb_joueurs_manuels + i];
 
         const joueurDiv = document.createElement('div');
-        joueurDiv.classList.add('grille-utilisateur'); // Ajouter une classe pour le style
+        joueurDiv.classList.add('grille-utilisateur'); // Add a class for styling
 
-        // Créer les boutons pour les numéros
+        // Create buttons for numbers
         let numerosButtons = '';
         for (let n = 1; n <= 49; n++) {
             numerosButtons += `<button class="numero" data-value="${n}" type="button">${n}</button>`;
         }
 
-        // Créer les boutons pour les étoiles
+        // Create buttons for stars
         let etoilesButtons = '';
         for (let n = 1; n <= 9; n++) {
             etoilesButtons += `<button class="etoile" data-value="${n}" type="button">${n}</button>`;
@@ -259,7 +298,7 @@ function afficherGrillesManuelles(nb_joueurs_manuels) {
 
         manualInputContainer.appendChild(joueurDiv);
 
-        // Ajouter les écouteurs d'événements aux boutons numéros
+        // Add event listeners to the number buttons
         const numerosButtonsElements = joueurDiv.querySelectorAll('.numero');
         numerosButtonsElements.forEach(bouton => {
             bouton.addEventListener('click', function () {
@@ -278,7 +317,7 @@ function afficherGrillesManuelles(nb_joueurs_manuels) {
             });
         });
 
-        // Ajouter les écouteurs d'événements aux boutons étoiles
+        // Add event listeners to the star buttons
         const etoilesButtonsElements = joueurDiv.querySelectorAll('.etoile');
         etoilesButtonsElements.forEach(bouton => {
             bouton.addEventListener('click', function () {
@@ -298,3 +337,18 @@ function afficherGrillesManuelles(nb_joueurs_manuels) {
         });
     }
 }
+
+// Add an event listener to the form before submission
+document.getElementById('jouer_form').addEventListener('submit', function () {
+    // Collect the player data
+    const grillesJoueursData = grillesJoueurs.map(joueur => ({
+        nom: joueur.nom,
+        numeros: joueur.grille.numeros,
+        etoiles: joueur.grille.etoiles
+    }));
+    
+    // Store it in the hidden input
+    document.getElementById('grilles_joueurs').value = JSON.stringify(grillesJoueursData);
+});
+
+
