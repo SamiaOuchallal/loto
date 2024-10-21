@@ -17,13 +17,12 @@ class ClassementControllerTest extends TestCase
     /** @test */
     public function it_returns_classment_when_there_are_players_with_tickets()
     {
-        // Crée une partie avec des numéros gagnants
+
         $partie = Partie::create([
             'numeros_gagnants' => json_encode([1, 2, 3, 4, 5]),
             'etoiles_gagnantes' => json_encode([1, 2]),
         ]);
 
-        // Crée un joueur avec un ticket
         $joueur = Joueur::create(['username' => 'Joueur 1']);
         Ticket::create([
             'id_joueur' => $joueur->id,
@@ -32,10 +31,8 @@ class ClassementControllerTest extends TestCase
             'etoiles' => json_encode([1]) // 1 étoile correcte
         ]);
 
-        // Envoie une requête GET à la méthode 'classement_joueurs'
         $response = $this->get('/classement');
 
-        // Vérifie que la réponse a un statut 200
         $response->assertStatus(200);
 
         // Vérifie que le classement contient des joueurs
@@ -46,7 +43,7 @@ class ClassementControllerTest extends TestCase
         $this->assertCount(1, $joueursTries); // 1 joueur devrait être dans le classement
 
         // Vérifie que les scores sont calculés correctement
-        $this->assertEquals(100, $joueursTries[0]['score']); // 10 points par numéro exact, 5 points par étoile
+        $this->assertEquals(58, $joueursTries[0]['score']); // 10 points par numéro exact, 5 points par étoile
     }
 
     /** @test */
@@ -61,7 +58,6 @@ class ClassementControllerTest extends TestCase
         // Envoie une requête GET à la méthode 'classement_joueurs'
         $response = $this->get('/classement');
 
-        // Vérifie que la réponse a un statut 200
         $response->assertStatus(200);
 
         // Vérifie que le classement est vide

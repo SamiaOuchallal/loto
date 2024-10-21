@@ -13,13 +13,13 @@ class Partie extends Model
 
     // Propriétés remplissables
     protected $fillable = [
-        'numeros_gagnants', // Ajoutez cette ligne
-        'etoiles_gagnantes', // Ajoutez cette ligne
-        // Vous pouvez également ajouter d'autres colonnes ici si nécessaire
+        'numeros_gagnants',
+        'etoiles_gagnantes',
     ];
 
+    // Castés en tableau
     protected $casts = [
-        'numeros_gagnants' => 'array', // Assurez-vous que cette colonne est castée en tableau
-        'etoiles_gagnantes' => 'array', // Idem ici
+        'numeros_gagnants' => 'array', 
+        'etoiles_gagnantes' => 'array', 
     ];
 }

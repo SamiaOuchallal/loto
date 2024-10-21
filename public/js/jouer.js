@@ -8,7 +8,7 @@ let nomsRandom = ["Alpheus", "Brody", "Caelum", "Dax", "Elysia", "Finn", "Galen"
     "Aisling", "Beau", "Calla", "Darian", "Elara", "Finley", "Greysen", "Hadley", "Indigo", "Jace", "Kaia", 
     "Leif", "Maelis", "Niko", "Odette", "Pax", "Quinley", "Riven","Selene", "Taliah", "Ulrich", "Vespera", "Zephyra"
 ];
-let grillesJoueurs = []; // Déclaration globale de grillesJoueurs
+let grillesJoueurs = [];
 
 document.addEventListener('DOMContentLoaded', function () {
     const boutongenerer = document.querySelector('.generate');
@@ -77,51 +77,48 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 // Gérer la sélection manuelle des numéros
-bouton_numero.forEach(bouton => {
-    bouton.addEventListener('click', function () {
-        const n = parseInt(this.getAttribute('data-value'));
+    bouton_numero.forEach(bouton => {
+        bouton.addEventListener('click', function () {
+            const n = parseInt(this.getAttribute('data-value'));
 
-        // Si le numéro est déjà choisi, le retirer
-        if (numeros.includes(n)) {
-            numeros = numeros.filter(num => num !== n); // Retirer le numéro
-            num_choisi.textContent = numeros.join(", "); // Mettre à jour l'affichage
-            this.classList.remove('selected'); // Retirer la classe sélectionnée
-        } else {
-            if (numeros.length < 5) {
-                numeros.push(n);
-                num_choisi.textContent = numeros.join(", ");
-                this.classList.add('selected'); // Ajouter la classe sélectionnée
+            // Si le numéro est déjà choisi, le retirer
+            if (numeros.includes(n)) {
+                numeros = numeros.filter(num => num !== n); // Retirer le numéro
+                num_choisi.textContent = numeros.join(", "); // Mettre à jour l'affichage
+                this.classList.remove('selected'); // Retirer la classe sélectionnée
             } else {
-                alert("Tu as déjà choisi 5 numéros !");
+                if (numeros.length < 5) {
+                    numeros.push(n);
+                    num_choisi.textContent = numeros.join(", ");
+                    this.classList.add('selected'); // Ajouter la classe sélectionnée
+                } else {
+                    alert("Tu as déjà choisi 5 numéros !");
+                }
             }
-        }
+        });
     });
-});
 
-// Gérer la sélection manuelle des étoiles
-bouton_etoile.forEach(bouton => {
-    bouton.addEventListener('click', function () {
-        const n = parseInt(this.getAttribute('data-value'));
+    // Gérer la sélection manuelle des étoiles
+    bouton_etoile.forEach(bouton => {
+        bouton.addEventListener('click', function () {
+            const n = parseInt(this.getAttribute('data-value'));
 
-        // Si l'étoile est déjà choisie, la retirer
-        if (etoiles.includes(n)) {
-            etoiles = etoiles.filter(etoile => etoile !== n); // Retirer l'étoile
-            etoile_choisi.textContent = etoiles.join(", "); // Mettre à jour l'affichage
-            this.classList.remove('selected'); // Retirer la classe sélectionnée
-        } else {
-            if (etoiles.length < 2) {
-                etoiles.push(n);
-                etoile_choisi.textContent = etoiles.join(", ");
-                this.classList.add('selected'); // Ajouter la classe sélectionnée
+            // Si l'étoile est déjà choisie, la retirer
+            if (etoiles.includes(n)) {
+                etoiles = etoiles.filter(etoile => etoile !== n); // Retirer l'étoile
+                etoile_choisi.textContent = etoiles.join(", "); // Mettre à jour l'affichage
+                this.classList.remove('selected'); // Retirer la classe sélectionnée
             } else {
-                alert("Tu as déjà choisi 2 étoiles !");
+                if (etoiles.length < 2) {
+                    etoiles.push(n);
+                    etoile_choisi.textContent = etoiles.join(", ");
+                    this.classList.add('selected'); // Ajouter la classe sélectionnée
+                } else {
+                    alert("Tu as déjà choisi 2 étoiles !");
+                }
             }
-        }
+        });
     });
-});
-
-
-
 
     // Valider la grille
     valider_grille.addEventListener('click', function () {
@@ -134,38 +131,32 @@ bouton_etoile.forEach(bouton => {
     });
 
     // Gestion de la soumission du formulaire
-// Gestion de la soumission du formulaire
-document.getElementById('jouer_form').addEventListener('submit', function (e) {
-    const participate = document.getElementById('participate');
+    document.getElementById('jouer_form').addEventListener('submit', function (e) {
+        const participate = document.getElementById('participate');
 
-    // Vérifiez d'abord que les champs cachés sont à jour
-    updateHiddenFields();
+        // Vérifiez d'abord que les champs cachés sont à jour
+        updateHiddenFields();
 
-    // Vérification finale avant soumission
-    if (participate.checked) {
-        // Si l'utilisateur veut participer, vérifiez la sélection
-        if (numeros.length !== 5 || etoiles.length !== 2) {
-            e.preventDefault();
-            alert('Veuillez sélectionner 5 numéros et 2 étoiles avant de lancer la partie.');
-        }
-
-        // Vérifiez également que tous les joueurs manuels ont des numéros et étoiles valides
-        for (let i = 0; i < grillesJoueurs.length; i++) {
-            const joueur = grillesJoueurs[i];
-            if (joueur.grille.numeros.length !== 5 || joueur.grille.etoiles.length !== 2) {
+        // Vérification finale avant soumission
+        if (participate.checked) {
+            // Si l'utilisateur veut participer, vérifiez la sélection
+            if (numeros.length !== 5 || etoiles.length !== 2) {
                 e.preventDefault();
-                alert(`Le joueur ${joueur.nom} doit avoir 5 numéros et 2 étoiles.`);
-                break;
+                alert('Veuillez sélectionner 5 numéros et 2 étoiles avant de lancer la partie.');
             }
+
+            for (let i = 0; i < grillesJoueurs.length; i++) {
+                const joueur = grillesJoueurs[i];
+                if (joueur.grille.numeros.length !== 5 || joueur.grille.etoiles.length !== 2) {
+                    e.preventDefault();
+                    alert(`Le joueur ${joueur.nom} doit avoir 5 numéros et 2 étoiles.`);
+                    break;
+                }
+            }
+            const grillesInput = document.getElementById('grilles_joueurs');
+            grillesInput.value = JSON.stringify(grillesJoueurs);
         }
-
-        // Ajout des grilles des joueurs manuels dans le champ caché
-        const grillesInput = document.getElementById('grilles_joueurs');
-        grillesInput.value = JSON.stringify(grillesJoueurs);
-    }
-});
-
-
+    });
 
     // Afficher/Masquer les champs de participation
     const participate = document.getElementById('participate');
@@ -174,16 +165,13 @@ document.getElementById('jouer_form').addEventListener('submit', function (e) {
         participationFields.style.display = this.checked ? 'block' : 'none';
     });
 
-    // Génération aléatoire des numéros et étoiles
     const boutonGenererGrille = document.getElementById('generer-grille');
 
     boutonGenererGrille.addEventListener('click', function () {
         resetSelections(); // Réinitialiser les sélections actuelles
 
-        // Générer 5 numéros aléatoires uniques entre 1 et 49
-        numeros = generateRandomNumbers(5, 49);  // Mise à jour du tableau 'numeros'
-        // Générer 2 étoiles aléatoires uniques entre 1 et 9
-        etoiles = generateRandomNumbers(2, 9);   // Mise à jour du tableau 'etoiles'
+        numeros = generateRandomNumbers(5, 49);  
+        etoiles = generateRandomNumbers(2, 9); 
 
         // Appliquer les sélections aux boutons des numéros
         numeros.forEach(numero => {
@@ -253,7 +241,7 @@ document.getElementById('jouer_form').addEventListener('submit', function (e) {
 });
 
 // Fonction pour afficher les grilles des joueurs manuels
-// Function to display the manual players' grids
+
 function afficherGrillesManuelles(nb_joueurs_manuels) {
     const manualInputContainer = document.getElementById('manual_inputs');
 
@@ -262,21 +250,19 @@ function afficherGrillesManuelles(nb_joueurs_manuels) {
         return;
     }
 
-    manualInputContainer.innerHTML = ''; // Reset the container
+    manualInputContainer.innerHTML = ''; 
 
     for (let i = 0; i < nb_joueurs_manuels; i++) {
         const joueur = grillesJoueurs[grillesJoueurs.length - nb_joueurs_manuels + i];
 
         const joueurDiv = document.createElement('div');
-        joueurDiv.classList.add('grille-utilisateur'); // Add a class for styling
+        joueurDiv.classList.add('grille-utilisateur'); 
 
-        // Create buttons for numbers
         let numerosButtons = '';
         for (let n = 1; n <= 49; n++) {
             numerosButtons += `<button class="numero" data-value="${n}" type="button">${n}</button>`;
         }
 
-        // Create buttons for stars
         let etoilesButtons = '';
         for (let n = 1; n <= 9; n++) {
             etoilesButtons += `<button class="etoile" data-value="${n}" type="button">${n}</button>`;
@@ -298,7 +284,6 @@ function afficherGrillesManuelles(nb_joueurs_manuels) {
 
         manualInputContainer.appendChild(joueurDiv);
 
-        // Add event listeners to the number buttons
         const numerosButtonsElements = joueurDiv.querySelectorAll('.numero');
         numerosButtonsElements.forEach(bouton => {
             bouton.addEventListener('click', function () {
@@ -317,7 +302,6 @@ function afficherGrillesManuelles(nb_joueurs_manuels) {
             });
         });
 
-        // Add event listeners to the star buttons
         const etoilesButtonsElements = joueurDiv.querySelectorAll('.etoile');
         etoilesButtonsElements.forEach(bouton => {
             bouton.addEventListener('click', function () {
@@ -338,17 +322,27 @@ function afficherGrillesManuelles(nb_joueurs_manuels) {
     }
 }
 
-// Add an event listener to the form before submission
-document.getElementById('jouer_form').addEventListener('submit', function () {
-    // Collect the player data
-    const grillesJoueursData = grillesJoueurs.map(joueur => ({
-        nom: joueur.nom,
-        numeros: joueur.grille.numeros,
-        etoiles: joueur.grille.etoiles
-    }));
-    
-    // Store it in the hidden input
-    document.getElementById('grilles_joueurs').value = JSON.stringify(grillesJoueursData);
-});
+    document.getElementById('jouer_form').addEventListener('submit', function () {
+        const grillesJoueursData = grillesJoueurs.map(joueur => ({
+            nom: joueur.nom,
+            numeros: joueur.grille.numeros,
+            etoiles: joueur.grille.etoiles
+        }));
+        
+        document.getElementById('grilles_joueurs').value = JSON.stringify(grillesJoueursData);
+    });
 
 
+function ajouterJoueurManuel(nom, numeros, etoiles) {
+    const joueursExistants = document.getElementById('grilles_joueurs').value;
+    const joueursArray = joueursExistants ? JSON.parse(joueursExistants) : [];
+
+    const nouveauJoueur = {
+        'username': nom,
+        'numeros': numeros,
+        'etoiles': etoiles
+    };
+
+    joueursArray.push(nouveauJoueur);
+    document.getElementById('grilles_joueurs').value = JSON.stringify(joueursArray);
+}

@@ -10,10 +10,10 @@ class CreateTicketsTable extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_joueur'); // Créez sans contrainte
-            $table->foreignId('id_partie'); // Créez sans contrainte
-            $table->string('numeros'); // Numéros de loto
-            $table->string('etoiles'); // Étoiles de loto
+            $table->foreignId('id_joueur'); 
+            $table->foreignId('id_partie');
+            $table->string('numeros'); 
+            $table->string('etoiles');
             $table->timestamps();
         });
     }

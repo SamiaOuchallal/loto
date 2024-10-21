@@ -13,291 +13,123 @@ class TicketController extends Controller{
     public function afficherForm(){
         return view('jouer_en_ligne');
     }
-
-    /*public function soumettreForm(Request $request) {
-        $participate = $request->input('participate') == '1';
-    
-        $data = $request->validate([
-            'username' => 'nullable|string|max:255',
-            'nb_joueurs_random' => 'required|integer|min:0|max:100',
-        ]);
-    
-        DB::beginTransaction();
-    
-        try {
-            // Générer les numéros et étoiles gagnants
-            $ticketGagnant = $this->generer_ticket_gagnant();
-    
-            // Log des numéros et étoiles gagnants
-            \Log::info('Numéros gagnants : ' . json_encode($ticketGagnant['numeros']));
-            \Log::info('Étoiles gagnantes : ' . json_encode($ticketGagnant['etoiles']));
-    
-            // Créer la partie avec les numéros et étoiles gagnants
-            $partie = Partie::create([
-                'numeros_gagnants' => json_encode($ticketGagnant['numeros']),
-                'etoiles_gagnantes' => json_encode($ticketGagnant['etoiles']),
-            ]);
-    
-            // Si l'utilisateur participe
-            if ($participate && !empty($data['username'])) {
-                $joueur = Joueur::create([
-                    'username' => $data['username'],
-                    'id_partie' => $partie->id,
-                ]);
-    
-                Ticket::create([
-                    'id_joueur' => $joueur->id,
-                    'id_partie' => $partie->id,
-                    'numeros' => json_encode($request->input('numeros')), // S'assurer que ces valeurs sont présentes
-                    'etoiles' => json_encode($request->input('etoiles')),
-                ]);
-            }
-    
-            // Générer des joueurs aléatoires si demandé
-            if ($data['nb_joueurs_random'] > 0) {
-                $joueurs = $this->players_generator($data['nb_joueurs_random'], $partie->id);
-    
-                foreach ($joueurs as $joueurData) {
-                    // Vérifier si le joueur existe déjà
-                    $existingPlayer = Joueur::where('username', $joueurData['username'])
-                                            ->where('id_partie', $partie->id)
-                                            ->first();
-    
-                    if (!$existingPlayer) {
-                        $joueur = Joueur::create([
-                            'username' => $joueurData['username'],
-                            'id_partie' => $partie->id,
-                        ]);
-    
-                        // Générer un ticket pour le joueur
-                        $ticketNumeros = $this->generer_numeros();
-                        $ticketEtoiles = $this->generer_etoiles();
-    
-                        Ticket::create([
-                            'id_joueur' => $joueur->id,
-                            'id_partie' => $partie->id,
-                            'numeros' => json_encode($ticketNumeros),
-                            'etoiles' => json_encode($ticketEtoiles),
-                        ]);
-                    }
-                }
-            }
-    
-            DB::commit();
-            return redirect()->route('classement')->with('success', 'Partie lancée avec succès !');
-        } catch (\Exception $e) {
-            DB::rollback();
-            \Log::error('Erreur lors de la soumission: ' . $e->getMessage());
-            return redirect()->route('jouer_en_ligne')->withErrors('Une erreur est survenue. Veuillez réessayer.');
-        }
-    }bonne fonction*/
-
-
+   
     public function soumettreForm(Request $request) {
-        $participate = $request->input('participate') == '1';
-    
-        // Validation des données
-        $data = $request->validate([
-            'username' => 'nullable|string|max:255',
+            
+        $rules = [
             'nb_joueurs_random' => 'required|integer|min:0|max:100',
-            'grilles_joueurs' => 'nullable|array', // Pour les joueurs manuels
-            'grilles_joueurs.*.nom' => 'required|string|max:255', // Nom de chaque joueur
-            'grilles_joueurs.*.numeros' => 'required|array|min:5|max:5', // 5 numéros requis
-            'grilles_joueurs.*.etoiles' => 'required|array|min:2|max:2', // 2 étoiles requises
-        ]);
-    
-        DB::beginTransaction();
-    
-        try {
-            // Générer les numéros et étoiles gagnants
-            $ticketGagnant = $this->generer_ticket_gagnant();
-    
-            // Créer la partie avec les numéros et étoiles gagnants
-            $partie = Partie::create([
-                'numeros_gagnants' => json_encode($ticketGagnant['numeros']),
-                'etoiles_gagnantes' => json_encode($ticketGagnant['etoiles']),
-            ]);
-    
-            // Si l'utilisateur participe
-            if ($participate && !empty($data['username'])) {
-                $joueur = Joueur::create([
-                    'username' => $data['username'],
-                    'id_partie' => $partie->id,
-                ]);
-    
-                Ticket::create([
-                    'id_joueur' => $joueur->id,
-                    'id_partie' => $partie->id,
-                    'numeros' => json_encode($request->input('numeros')), // S'assurer que ces valeurs sont présentes
-                    'etoiles' => json_encode($request->input('etoiles')),
-                ]);
-            }
-    
-            // Générer des joueurs aléatoires si demandé
-            if ($data['nb_joueurs_random'] > 0) {
-                $joueurs = $this->players_generator($data['nb_joueurs_random'], $partie->id);
-    
-                foreach ($joueurs as $joueurData) {
-                    $joueur = Joueur::create([
-                        'username' => $joueurData['username'],
-                        'id_partie' => $partie->id,
-                    ]);
-    
-                    // Générer un ticket pour le joueur
-                    $ticketNumeros = $this->generer_numeros();
-                    $ticketEtoiles = $this->generer_etoiles();
-    
-                    Ticket::create([
-                        'id_joueur' => $joueur->id,
-                        'id_partie' => $partie->id,
-                        'numeros' => json_encode($ticketNumeros),
-                        'etoiles' => json_encode($ticketEtoiles),
-                    ]);
-                }
-            }
-    
-            // Enregistrer les joueurs manuels
-            if (!empty($data['grilles_joueurs'])) {
-                foreach ($data['grilles_joueurs'] as $joueurManuel) {
-                    $joueur = Joueur::create([
-                        'username' => $joueurManuel['nom'],
-                        'id_partie' => $partie->id,
-                    ]);
-    
-                    Ticket::create([
-                        'id_joueur' => $joueur->id,
-                        'id_partie' => $partie->id,
-                        'numeros' => json_encode($joueurManuel['numeros']),
-                        'etoiles' => json_encode($joueurManuel['etoiles']),
-                    ]);
-                }
-            }
-    
-            DB::commit();
-            return redirect()->route('classement')->with('success', 'Partie lancée avec succès !');
-        } catch (\Exception $e) {
-            DB::rollback();
-            \Log::error('Erreur lors de la soumission: ' . $e->getMessage());
-            return redirect()->route('jouer_en_ligne')->withErrors('Une erreur est survenue. Veuillez réessayer.');
+            'nb_joueurs'=>'required|integer|min:0|max:100',
+            'grilles_joueurs' => 'required|string', 
+        ];
+        
+        
+        if ($request->input('participate') == '1') {
+            $rules['username'] = 'required|string'; // Nom du joueur principal
+            $rules['numeros'] = 'required|array|max:5'; // Les numéros du joueur principal
+            $rules['etoiles'] = 'required|array|max:2'; // Les étoiles du joueur principal
         }
-    }    
-
-
-
-
-
-
-
-
-/*
-    public function soumettreForm(Request $request) {
-        // Log des données reçues pour le débogage
-        \Log::info('Données reçues: ', $request->all());
-    
-        // Vérification si l'utilisateur souhaite participer
-        $participate = $request->input('participate') == '1';
-    
-        // Validation des données
-        $data = $request->validate([
-            'username' => 'nullable|string|max:255',
-            'nb_joueurs_random' => 'required|integer|min:0|max:100',
-            'grilles_joueurs' => 'nullable|array', // Pour les joueurs manuels
-            'grilles_joueurs.*.nom' => 'required|string|max:255', // Nom de chaque joueur
-            'grilles_joueurs.*.numeros' => 'required|array|min:5|max:5', // 5 numéros requis
-            'grilles_joueurs.*.etoiles' => 'required|array|min:2|max:2', // 2 étoiles requises
-        ]);
-    
+        $participate=$request->input('participate') == '1';
+        
+        $data = $request->validate($rules);
+        
         DB::beginTransaction();
-    
+        
         try {
-            // Générer les numéros et étoiles gagnants
-            $ticketGagnant = $this->generer_ticket_gagnant();
+                $ticketGagnant = $this->generer_ticket_gagnant();
+        
+                $partie = Partie::create([
+                    'numeros_gagnants' => json_encode($ticketGagnant['numeros']),
+                    'etoiles_gagnantes' => json_encode($ticketGagnant['etoiles']),
+                ]);
+        
+                
+                $grillesJoueurs = json_decode($data['grilles_joueurs'], true); // Décoder le champ grilles_joueurs (JSON) pour obtenir les joueurs
+        
+                // Ajouter le joueur principal dans grilles_joueurs seulement s'il participe
+                if ($request->input('participate') == '1') {
+                    $grillesJoueurs[] = [
+                        'nom' => $data['username'],
+                        'numeros' => $data['numeros'],
+                            'etoiles' => $data['etoiles']
+                    ];
+                }
+
+
+         if($participate && $data['nb_joueurs_random']<$data['nb_joueurs']){
+
+            if($data['nb_joueurs_random']==$data['nb_joueurs']){
+                for ($i = 0; $i < $data['nb_joueurs_random']; $i++) {
+                    $grillesJoueurs[] = [
+                        'nom' =>$this->generer_nom(),
+                
+                            'numeros' => $this->generer_numeros(),
+                            'etoiles' => $this->generer_etoiles() 
+                    ];
+               }
+               }
+
+            foreach ($grillesJoueurs as $joueurData) {
+                if (!isset($joueurData['numeros']) || !isset($joueurData['etoiles'])) {
+                    throw new \Exception("Les numéros ou étoiles sont manquants pour un joueur: " . $joueurData['nom']);
+                }
     
-            // Log des numéros et étoiles gagnants
-            \Log::info('Numéros gagnants : ' . json_encode($ticketGagnant['numeros']));
-            \Log::info('Étoiles gagnantes : ' . json_encode($ticketGagnant['etoiles']));
-    
-            // Créer la partie avec les numéros et étoiles gagnants
-            $partie = Partie::create([
-                'numeros_gagnants' => json_encode($ticketGagnant['numeros']),
-                'etoiles_gagnantes' => json_encode($ticketGagnant['etoiles']),
-            ]);
-    
-            // Si l'utilisateur participe et a un nom
-            if ($participate && !empty($data['username'])) {
                 $joueur = Joueur::create([
-                    'username' => $data['username'],
+                    'username' => $joueurData['nom'],
                     'id_partie' => $partie->id,
                 ]);
     
-                // Assurez-vous que les numéros et étoiles de l'utilisateur sont définis
                 Ticket::create([
                     'id_joueur' => $joueur->id,
                     'id_partie' => $partie->id,
-                    'numeros' => json_encode($request->input('numeros', [])), // Utilisez une valeur par défaut vide
-                    'etoiles' => json_encode($request->input('etoiles', [])),
+                    'numeros' => json_encode($joueurData['numeros']),
+                    'etoiles' => json_encode($joueurData['etoiles']),
                 ]);
             }
-    
-            // Générer des joueurs aléatoires si demandé
-            if ($data['nb_joueurs_random'] > 0) {
-                $joueurs = $this->players_generator($data['nb_joueurs_random'], $partie->id);
-    
-                foreach ($joueurs as $joueurData) {
-                    // Vérifier si le joueur existe déjà
-                    $existingPlayer = Joueur::where('username', $joueurData['username'])
-                                            ->where('id_partie', $partie->id)
-                                            ->first();
-    
-                    if (!$existingPlayer) {
-                        $joueur = Joueur::create([
-                            'username' => $joueurData['username'],
-                            'id_partie' => $partie->id,
-                        ]);
-    
-                        // Générer un ticket pour le joueur
-                        $ticketNumeros = $this->generer_numeros();
-                        $ticketEtoiles = $this->generer_etoiles();
-    
-                        Ticket::create([
-                            'id_joueur' => $joueur->id,
-                            'id_partie' => $partie->id,
-                            'numeros' => json_encode($ticketNumeros),
-                            'etoiles' => json_encode($ticketEtoiles),
-                        ]);
+
+         } else {
+
+
+                if($data['nb_joueurs_random']==$data['nb_joueurs']){
+                    for ($i = 0; $i < $data['nb_joueurs_random']; $i++) {
+                        $grillesJoueurs[] = [
+                            'nom' =>$this->generer_nom(),
+                                'numeros' => $this->generer_numeros(),
+                                'etoiles' => $this->generer_etoiles() 
+                        ];
+                   }
+                   }
+
+                foreach ($grillesJoueurs as $joueurData) {
+                    if (!isset($joueurData['numeros']) || !isset($joueurData['etoiles'])) {
+                        throw new \Exception("Les numéros ou étoiles sont manquants pour un joueur: " . $joueurData['nom']);
                     }
-                }
-            }
-    
-            // Enregistrer les joueurs manuels
-            if (!empty($data['grilles_joueurs'])) {
-                foreach ($data['grilles_joueurs'] as $joueurManuel) {
-                    // Créer un joueur manuel
+        
                     $joueur = Joueur::create([
-                        'username' => $joueurManuel['nom'], // Accès direct à la clé 'nom'
+                        'username' => $joueurData['nom'],
                         'id_partie' => $partie->id,
                     ]);
-    
-                    // Créer un ticket pour le joueur manuel
+        
                     Ticket::create([
                         'id_joueur' => $joueur->id,
                         'id_partie' => $partie->id,
-                        'numeros' => json_encode($joueurManuel['numeros']), // Accès direct à 'numeros'
-                        'etoiles' => json_encode($joueurManuel['etoiles']), // Accès direct à 'etoiles'
+                        'numeros' => json_encode($joueurData['numeros']),
+                        'etoiles' => json_encode($joueurData['etoiles']),
                     ]);
                 }
+
             }
-    
-            DB::commit();
-            return redirect()->route('classement')->with('success', 'Partie lancée avec succès !');
-        } catch (\Exception $e) {
-            DB::rollback();
-            \Log::error('Erreur lors de la soumission: ' . $e->getMessage());
-            return redirect()->route('jouer_en_ligne')->withErrors('Une erreur est survenue. Veuillez réessayer.');
+
+                DB::commit();
+                return redirect()->route('classement')->with('success', 'Partie lancée avec succès !');
+
+
+            } catch (\Exception $e) {
+                DB::rollback();
+                \Log::error('Erreur lors de la soumission: ' . $e->getMessage());
+                return redirect()->route('jouer_en_ligne')->withErrors('Une erreur est survenue. Veuillez réessayer.');
+            }
         }
-    }
-    
-*/
+
     public function generer_etoiles(){
         $etoiles=[];
         while (count($etoiles)<2){
@@ -323,89 +155,33 @@ class TicketController extends Controller{
     }
 
     public function generer_nom(){
-        $noms=["Josh","Victoire","India","Axeeel","Ellen","Kavu","Alex","Ramir","Ines","Sofiane","Djib","Fuuuull"];
+        $noms=["Josh","Victoire","India","Axeeel","Ellen","Kavu","Alex","Ramir","Ines","Sofiane","Djib","Fuuuull","Alpheus", "Brody", "Caelum", "Dax", "Elysia", "Finn", "Galen", "Harper", "Ilias", 
+    "Jaxon", "Kiera", "Lila", "Milo", "Nova", "Orion", "Phaedra", "Quinlan", "Raine", "Soren", "Talia",
+    "Ulysses", "Vesper", "Wren", "Xena", "Yara", "Zephyr", "Anika", "Bodhi", "Cassian", "Delia", 
+    "Emrys", "Freya", "Gideon", "Harlow", "Isla", "Jett", "Kael", "Lyra", "Maxon", "Nyla", "Odin", "Piper", 
+    "Quin", "Rhea", "Sage", "Thorne", "Uma", "Valor", "Wynne", "Xander", "Yvette", "Zuri", "Asher", "Bria",
+    "Caden", "Daria", "Elowen", "Felix", "Greer", "Huxley", "Imani", "Juno", "Kieran", "Livia", "Maverick", 
+    "Niamh", "Oren", "Pippa", "Riven", "Sable", "Tegan", "Uriel", "Vega", "Willa", "Xanthe", "Yasmine", "Zane", 
+    "Aisling", "Beau", "Calla", "Darian", "Elara", "Finley", "Greysen", "Hadley", "Indigo", "Jace", "Kaia", 
+    "Leif", "Maelis", "Niko", "Odette", "Pax", "Quinley", "Riven","Selene", "Taliah", "Ulrich", "Vespera", "Zephyra"
+];
         $n = array_rand($noms);
         return $noms[$n];
     }
-
-    /*public function players_generator($nb_joueurs, $id_partie){
-        $joueurs = []; // Liste des joueurs générés
-        
-        for ($i = 0; $i < $nb_joueurs; $i++) {
-            // Générer les infos du joueur
-            $joueurs[] = [
-                'username' => $this->generer_nom(),
-                'etoiles' => $this->generer_etoiles(),
-                'numeros' => $this->generer_numeros(),
-            ];
-    
-            // Créer le joueur
-            $joueur = Joueur::create([
-                'username' => $joueurs[$i]['username'],
-                'id_partie' => $id_partie,  // Associer le joueur à la partie en cours
-            ]);
-    
-            // Créer le ticket et l'associer à la partie et au joueur
-            Ticket::create([
-                'id_joueur' => $joueur->id, // Associer le joueur au ticket
-                'id_partie' => $id_partie,   // Associer le ticket à la partie
-                'etoiles' => json_encode($joueurs[$i]['etoiles']), // Convertir en JSON
-                'numeros' => json_encode($joueurs[$i]['numeros']), // Convertir en JSON
-            ]);
-    
-            \Log::info('Ticket créé pour le joueur ' . $joueur->id . ' avec id_partie ' . $id_partie);
-            
-        }
-    
-        // Retourner la liste des joueurs générés
-        return $joueurs;
-    }*/
-
-  /*  private function players_generator($nbJoueurs, $idPartie)
-{
-    // Récupérer des joueurs existants au hasard dans la base de données
-    $joueursExistants = Joueur::inRandomOrder()->take($nbJoueurs)->get();
-    
-    $joueurs = [];
-
-    foreach ($joueursExistants as $joueur) {
-        $grille = [
-            'numeros' => $this->generer_numeros(), // Fonction pour générer des numéros aléatoires
-            'etoiles' => $this->generer_etoiles(), // Fonction pour générer des étoiles aléatoires
-        ];
-
-        // Associer le joueur à la partie
-        $joueur->update([
-            'id_partie' => $idPartie, // Associe le joueur à la partie en cours
-        ]);
-
-        // Créer un ticket pour ce joueur
-        Ticket::create([
-            'id_joueur' => $joueur->id,
-            'id_partie' => $idPartie,
-            'numeros' => json_encode($grille['numeros']),
-            'etoiles' => json_encode($grille['etoiles']),
-        ]);
-
-        // Ajouter le joueur et sa grille au tableau
-        $joueurs[] = [
-            'username' => $joueur->username,
-            'numeros' => $grille['numeros'],
-            'etoiles' => $grille['etoiles'],
-        ];
-    }
-
-    return $joueurs;
-}*/
-
 
 
 private function players_generator($nbJoueurs, $idPartie) {
     $joueurs = [];
     for ($i = 0; $i < $nbJoueurs; $i++) {
+
+        $numeros=$this->generer_numeros();
+        $etoiles=$this->generer_etoiles();
+
         $joueurs[] = [
-            'username' => 'Joueur' . uniqid(), // Générer un nom d'utilisateur unique
+            'username' => 'Joueur' . uniqid(),
             'id_partie' => $idPartie,
+            'numeros' => $numeros,
+            'etoiles' => $etoiles,
         ];
     }
     return $joueurs;
@@ -415,7 +191,6 @@ private function players_generator($nbJoueurs, $idPartie) {
 public function generer_ticket_gagnant() {
     $n = $this->generer_numeros();
     $e = $this->generer_etoiles();
-    // Assurez-vous que les numéros et étoiles ne sont pas vides
     if (empty($n) || empty($e)) {
         throw new \Exception('Les numéros ou étoiles gagnants sont vides.');
     }
@@ -428,35 +203,25 @@ public function generer_ticket_gagnant() {
 
 public function lancerPartie($idPartie)
 {
-    // Générer un ticket gagnant
     $ticketGagnant = $this->generer_ticket_gagnant();
-    
-    // Assurez-vous que les numéros et étoiles sont présents
     $numerosGagnants = json_encode($ticketGagnant['numeros']);
     $etoilesGagnantes = json_encode($ticketGagnant['etoiles']); 
     
-    // Vérification du ticket généré (log pour débogage)
     \Log::info('Ticket gagnant généré :', $ticketGagnant);
     
-    // Trouver la partie par son ID
     $partie = Partie::find($idPartie);
     
-    // Vérification si la partie existe
     if (!$partie) {
         return redirect()->back()->with('error', 'Partie non trouvée.');
     }
     
-    // Mettre à jour la partie avec les numéros et étoiles gagnants
     $partie->numeros_gagnants = $numerosGagnants;
     $partie->etoiles_gagnantes = $etoilesGagnantes;
     $partie->save();
     dd($partie);  // Arrête le script et affiche les détails de la partie mise à jour
 
-    
-    // Optionnel : Log pour vérifier que la partie est bien sauvegardée
     \Log::info('Partie mise à jour avec numéros gagnants:', ['partie_id' => $partie->id]);
     
-    // Rediriger vers la page de classement avec succès
     return redirect()->route('classement')->with('success', 'La nouvelle partie a été lancée avec succès !');
 }
 

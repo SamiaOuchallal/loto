@@ -13,7 +13,6 @@ return new class extends Migration
             $table->string('username', 50);
             $table->timestamps();
         
-            // Ajout de la colonne id_partie, qui peut être NULL pour l'instant
             $table->foreignId('id_partie')->nullable()->constrained('parties')->onDelete('cascade');
         });
         

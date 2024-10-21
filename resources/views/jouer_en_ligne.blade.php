@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jouer en ligne</title>
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}"> <!-- Inclure le CSS -->
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
     <header>
@@ -79,7 +79,7 @@
 
             <label for="nb_joueurs">Combien de joueurs vont participer ?</label>
 
-</br>
+            </br>
             <input type="number" id="nb_joueurs" name="nb_joueurs" min="0" max="100" required>
             <h4>Souhaitez-vous générer des joueurs aléatoires ?</h4>
         
@@ -90,8 +90,7 @@
 
             <!-- Champs pour les joueurs manuels -->
             <section id="grilles_manuelles"></section>
-            <!-- Ajoutez ces lignes dans le formulaire -->
-<input type="hidden" id="grilles_joueurs" name="grilles_joueurs" value="">
+            <input type="hidden" id="grilles_joueurs" name="grilles_joueurs" value="">
 
 
             @if (session('success'))

@@ -300,7 +300,7 @@ table.classement-table tbody tr:hover {
     background-color: #e8f1fa;
 }
 
-/* Responsivité du tableau */
+/* Responsive du tableau */
 @media screen and (max-width: 768px) {
     table.classement-table {
         width: 100%;
@@ -340,15 +340,14 @@ table.classement-table tbody tr:hover {
 }
 
 /* Classe pour les boutons sélectionnés */
-/* Style pour les numéros et étoiles sélectionnés */
 .selected {
-    background-color: #7289E8; /* Couleur de fond lorsque sélectionné */
-    color: white; /* Couleur du texte pour une meilleure lisibilité */
-    border: 2px solid #fff; /* Bordure pour mettre en évidence la sélection */
+    background-color: #7289E8;
+    color: white; 
+    border: 2px solid #fff;
 }
 
-/* Coursur de main pour indiquer cliquable */
+/* Cursor pour indiquer cliquable */
 .numero, .etoile {
     cursor: pointer; /* Indiquer que c'est cliquable */
-    transition: background-color 0.3s, color 0.3s; /* Transition douce */
+    transition: background-color 0.3s, color 0.3s;
 }
